@@ -40,11 +40,11 @@ $ftpUser = "tccftp00862";
 $ftpPwd = "v1V5B7g1";*/
 
 //中堂焦利小学的正式环境，tv：1227636321
-$gateId = '441956001650000002'; //停车场编号
+/*$gateId = '441956001650000002'; //停车场编号
 $initKey = 'VqJ6y32p';
 $ftpIP = "59.39.179.76";
 $ftpUser = "tccftp00919";
-$ftpPwd = "l6I0c2P4";
+$ftpPwd = "l6I0c2P4";*/
 
 //中堂第四小学的正式环境，tv：1211334443
 /*$gateId = '441956001650000003'; //停车场编号
@@ -68,13 +68,13 @@ $ftpUser = "tccftp00944";
 $ftpPwd = "Z4o2c8I3";*/
 
 //测试环境
-/*$gateId = '44190000000000test';
+$gateId = '44190000000000test';
 $initKey = '127.0.0.1';
 $ftpIP = "59.39.179.76";
 $ftpUser = "tcctest";
-$ftpPwd = "password";*/
+$ftpPwd = "password";
 
-$webservice_url = "http://59.39.179.76:9080/services/hole?wsdl";//webservice地址
+$webservice_url = "http://59.39.179.74:9070/services/hole?wsdl";//webservice地址
 $directArr = array(
     "1" => "1",
     "2" => "1"

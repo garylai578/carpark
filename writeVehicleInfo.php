@@ -15,10 +15,6 @@ $time_ago = time();
 set_time_limit(0);
 $suc = false;
 
-//连接ftp
-$conn = ftp_connect($ftpIP) or die("Could not connect the ftp");    //连接标识ftp_connect("ftp地址")
-ftp_login($conn, $ftpUser, $ftpPwd);  //进行FTP连接ftp_login($conn,"用户名",“登录密码")
-
 while($suc == false) { //第一次连接可能会超时或者失败，所以需要重连直至成功
     try {
         libxml_disable_entity_loader(false); //解决webservice间歇性调用失败的问题：failed to load external entity
@@ -59,29 +55,23 @@ while($suc == false) { //第一次连接可能会超时或者失败，所以需�
                     $res2 = $mysqli->query($sql2);
                     $car = $res2->fetch_assoc();
 
-                    // 上传照片
-                    $list = ftp_nlist($conn, '.');
-                    if (sizeof($list) == 0)
-                        ftp_mkdir($conn, $gateId);
-                    $picPath1 = $gateId . '/' . date("Ymd", time()) . '_' . mt_rand() . '.jpg'; //命名规则：停车场编号/20190323+序号.jpg。图片名称不要有中文，序号不重复即可。
-                    ftp_pasv($conn, true);  // 设置为被动模式，否则上传会失败
-                    echo ftp_put($conn, $picPath1, $carPass['picPath1'], FTP_BINARY);
-
                     // 上传过车信息
                     $cc = new Car();
                     $cc->setPassTime($carPass['passTime']);
                     $cc->setLicense($car['license']);
                     $cc->setLicenseColor($car['licenseColor']);
                     $cc->setCarType($car['type']);
-                    $cc->setPicPath1($picPath1);
                     $writeParam = $cc->toCarArray();
                     $writeParam['gateId'] = $gateId;
                     $writeParam['directType'] = $directType;
                     $writeParam['driverWayNo'] = $directWayNo;
                     $writeParam['token'] = $token;
+                    $writeParam['picBase64'] = imgToBase64Json($carPass['picPath1']);
+                    $writeParam['sendFlag'] = 1;
+//                    echo("<br>pic:".$writeParam['picBase64']);
 
-                    $writeArr = $client->writeVehicleInfo($writeParam);//调用其中writeVehicleInfo方法写入车辆信息
-                    echo "<br>writeVehicleInfo: ";
+                    $writeArr = $client->vehicleWriteInfo($writeParam);//调用其中writeVehicleInfo方法写入车辆信息
+                    echo "<br>vehicleWriteInfo: ";
                     print_r($writeArr);
                     // 如果上传成功，则写入更新时间
                     $xmlData = simplexml_load_string($writeArr->String);
@@ -114,8 +104,30 @@ while($suc == false) { //第一次连接可能会超时或者失败，所以需�
     }
 }
 
-ftp_close($conn);
 $time_end = time();
 fwrite($log, date("Y-m-d H:i:s", time()).'    webservice执行时间差为：'.($time_end-$time_ago).'s , 上传成功：'.$num."条\r\n");
 fclose($log);
+
+/**
+ * 获取图片的Base64编码(json格式)
+ * @param $img_file 传入本地图片地址
+ * @return string
+ */
+function imgToBase64Json($img_file) {
+    $img_base64 = '';
+    if (file_exists($img_file)) {
+        $app_img_file = $img_file; // 图片路径
+        $fp = fopen($app_img_file, "r"); // 图片是否可读权限
+        if ($fp) {
+            $filesize = filesize($app_img_file);
+            $content = fread($fp, $filesize);
+            $img_base64 = base64_encode($content); // base64编码
+        }
+        fclose($fp);
+    }
+
+    $result['SubImageInfo']=array(array("FileFormat"=>"Jpeg", "Data"=>$img_base64));
+    return json_encode($result); //返回图片的base64
+}
+
 exit;
